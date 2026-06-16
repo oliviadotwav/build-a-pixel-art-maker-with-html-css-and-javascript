@@ -133,72 +133,111 @@ canvas.addEventListener("mouseleave", () => {
 // --- Step 3: Flood fill algorithm ---
 
 function floodFill(row, col, newColor) {
-  // TODO: Get the targetColor from grid[row][col]
-  // TODO: If targetColor equals newColor, return early (nothing to fill)
-  // TODO: Create a stack array with [[row, col]]
-  // TODO: While the stack is not empty:
-  //   1. Pop [r, c] from the stack
-  //   2. Skip if out of bounds
-  //   3. Skip if grid[r][c] !== targetColor
-  //   4. Set grid[r][c] to newColor
-  //   5. Push all 4 neighbors: [r-1,c], [r+1,c], [r,c-1], [r,c+1]
-  // TODO: Call render()
+  const targetColor = grid[row][col];
+  if (targetColor === newColor) return;
+
+  const stack = [[row, col]];
+
+  while (stack.length > 0) {
+    const [r, c] = stack.pop();
+
+    if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
+    if (grid[r][c] !== targetColor) continue;
+
+    grid[r][c] = newColor;
+
+    stack.push([r - 1, c]);
+    stack.push([r + 1, c]);
+    stack.push([r, c - 1]);
+    stack.push([r, c + 1]);
+  }
+
+  render();
 }
 
 // --- Step 4-a: Build the color palette ---
 
 function buildPalette() {
-  // TODO: Get the palette element by id "color-palette"
-  // TODO: Loop through PRESET_COLORS and for each color:
-  //   1. Create a div element
-  //   2. Add the "color-swatch" class
-  //   3. If this color matches currentColor, also add the "active" class
-  //   4. Set its backgroundColor to the color
-  //   5. Add a click handler that:
-  //      - Sets currentColor to this color
-  //      - Syncs the custom color picker value
-  //      - Removes "active" from all swatches
-  //      - Adds "active" to this swatch
-  //   6. Append the swatch to the palette
+  const palette = document.getElementById("color-palette");
+  PRESET_COLORS.forEach((color) => {
+    const swatch = document.createElement("div");
+    swatch.classList.add("color-swatch");
+
+    if (color === currentColor) swatch.classList.add("active");
+
+    swatch.style.backgroundColor = color;
+
+    swatch.addEventListener("click", () => {
+      currentColor = color;
+      document.getElementById("custom-color").value = color;
+      document
+        .querySelectorAll(".color-swatch")
+        .forEach((s) => s.classList.remove("active"));
+      swatch.classList.add("active");
+    });
+    palette.appendChild(swatch);
+  });
 }
 
 // --- Step 4-b: Custom color picker ---
 
-// TODO: Add an "input" event listener to the "custom-color" element
-// When it changes:
-//   - Set currentColor to e.target.value
-//   - Remove "active" class from all color swatches
+document.getElementById("custom-color").addEventListener("input", (e) => {
+  currentColor = e.target.value;
+  document
+    .querySelectorAll(".color-swatch")
+    .forEach((s) => s.classList.remove("active"));
+});
 
-// --- Step 4-c: Tool button switching ---
-
-// TODO: Select all ".tool-btn" elements and add click handlers
-// When a tool button is clicked:
-//   - Set currentTool to btn.dataset.tool
-//   - Remove "active" from all tool buttons
-//   - Add "active" to the clicked button
-
+document.querySelectorAll(".tool-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    currentTool = btn.dataset.tool;
+    document
+      .querySelectorAll(".tool-btn")
+      .forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+  });
+});
 buildPalette();
 
 // --- Step 5: Grid size switching ---
 
-// TODO: Add a "change" event listener to the "grid-size" element
-// When it changes:
-//   - Show a confirm dialog: "Changing grid size will clear your canvas. Continue?"
-//   - If confirmed: update gridSize with parseInt(e.target.value) and call init()
-//   - If cancelled: revert e.target.value back to gridSize
-
+document.getElementById("grid-size").addEventListener("change", (e) => {
+  const confirmed = confirm(
+    "Changing grid size will clear your canvas. Continue?",
+  );
+  if (confirmed) {
+    gridSize = parseInt(e.target.value);
+    init();
+  } else {
+    e.target.value = gridSize;
+  }
+});
 // --- Step 6: PNG export ---
 
-// TODO: Add a "click" event listener to the "export-btn" element
-// When clicked:
-//   1. Create a new canvas element (not the visible one!)
-//   2. Calculate exportCellSize = Math.max(16, Math.floor(512 / gridSize))
-//   3. Set the export canvas size to gridSize * exportCellSize
-//   4. Loop through the grid and draw each cell (NO grid lines)
-//   5. Create an <a> element with download="pixel-art.png"
-//   6. Set href to exportCanvas.toDataURL("image/png")
-//   7. Call link.click() to trigger the download
+document.getElementById("export-btn").addEventListener("click", () => {
+  const exportCanvas = document.createElement("canvas");
+  const exportCtx = exportCanvas.getContext("2d");
+  const exportCellSize = Math.max(16, Math.floor(512 / gridSize));
+  exportCanvas.width = gridSize * exportCellSize;
+  exportCanvas.height = gridSize * exportCellSize;
 
+  for (let row = 0; row < gridSize; row++) {
+    for (let col = 0; col < gridSize; col++) {
+      exportCtx.fillStyle = grid[row][col];
+      exportCtx.fillRect(
+        col * exportCellSize,
+        row * exportCellSize,
+        exportCellSize,
+        exportCellSize,
+      );
+    }
+  }
+
+  const link = document.createElement("a");
+  link.download = "pixel-art.png";
+  link.href = exportCanvas.toDataURL("image/png");
+  link.click();
+});
 // --- Step 7: Start the app! ---
 
 init();
