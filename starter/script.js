@@ -32,13 +32,14 @@ const PRESET_COLORS = [
 // --- Step 1-a: Initialize the grid and canvas ---
 
 function init() {
-  grid = Array.from({length: gridSize }, () =>
+  grid = Array.from({ length: gridSize }, () =>
     Array(gridSize).fill("#ffffff"),
   );
+
   cellSize = Math.floor(480 / gridSize);
 
-  canvas.width = gridSize * cellSize
-  canvas.height = gridSize * cellSize
+  canvas.width = gridSize * cellSize;
+  canvas.height = gridSize * cellSize;
 
   render();
 }
@@ -124,8 +125,8 @@ canvas.addEventListener("mouseup", () => {
 });
 
 canvas.addEventListener("mouseleave", () => {
-  isDrawing = false
-  hoveredCell = null
+  isDrawing = false;
+  hoveredCell = null;
   render();
 });
 
